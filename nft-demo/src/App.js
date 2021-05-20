@@ -20,6 +20,25 @@ function NFTCollection(props) {
   const [tokenOwner, setTokenOwner] = useState(undefined);
   const {api, allAccounts} = props;
   const toggleHover = () => setCardHovered(!cardHovered);
+  const addToken = async() => {
+      const account = allAccounts[0];
+      const attributes = [
+          {'Url': nftAttribute}];
+      const tokenExtrinsic = api.tx.nft.createToken(collectionId, tokenOwner, attributes, null);
+      const injector = await web3FromSource(account.meta.source);
+      tokenExtrinsic.signAndSend(account.address, { signer: injector.signer }, ({ status }) => {
+          if (status.isInBlock) {
+              console.log(`Completed at block hash #${status.asInBlock.toString()}`);
+          }
+      }).catch((error) => {
+          console.log(':( transaction failed', error);
+      });
+      setToggleOn(!isToggleOn)
+  }
+
+  const showTokenAttribute = () => {
+      setToggleOn(!isToggleOn)
+  }
 
   useEffect( () => {
     async function fetch() {
@@ -59,9 +78,7 @@ function NFTCollection(props) {
           </div>
           )
         })}
-          <button onClick={() => {
-              setToggleOn(!isToggleOn)
-          }}>
+          <button onClick={showTokenAttribute}>
               {`Add Token in ${collectionId} collection`}
           </button>
           {isToggleOn ?  <div>
@@ -73,23 +90,7 @@ function NFTCollection(props) {
                   Enter Token owner:
                   <input type="text" value={tokenOwner} onChange={(event) =>{setTokenOwner(event.target.value)}} />
               </label>
-              <button onClick={async() => {
-                  const account = allAccounts[0];
-                  const attributes = [
-                      {'Url': nftAttribute}];
-                  const tokenExtrinsic = api.tx.nft.createToken(collectionId, tokenOwner, attributes, null);
-                  const injector = await web3FromSource(account.meta.source);
-                  tokenExtrinsic.signAndSend(account.address, { signer: injector.signer }, ({ status }) => {
-                      if (status.isInBlock) {
-                          console.log(`Completed at block hash #${status.asInBlock.toString()}`);
-                      } else {
-                          console.log(`Current status: ${status.type}`);
-                      }
-                  }).catch((error) => {
-                      console.log(':( transaction failed', error);
-                  });
-                  setToggleOn(!isToggleOn)
-              }}>
+              <button onClick={addToken}>
                   {'Add'}
               </button>
           </div> : null}
