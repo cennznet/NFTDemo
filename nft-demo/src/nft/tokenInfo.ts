@@ -28,8 +28,8 @@ export function tokenInfoForCollection(instanceId: string, api: ApiInterfaceRx):
     instanceId,
     (collectionId: string): Observable<any[]> =>
       combineLatest([
-        api.query.nft.tokenAttributes.entries(collectionId),
-        api.query.nft.tokenAttributes.keys(collectionId),
+        api.query.nft?.tokenAttributes.entries(collectionId),
+        api.query.nft?.tokenAttributes.keys(collectionId),
       ]).pipe(
         switchMap(([entries, keys]) => {
           return api.query.nft.tokenOwner.multi(keys.map((key) => [collectionId, key.args[1]])).pipe(
