@@ -1,4 +1,3 @@
-//import { ExtDef } from '@polkadot/types';
 import {InterfaceTypes} from '@polkadot/types/types';
 
 export type ExtTypes = Record<string, keyof InterfaceTypes>;

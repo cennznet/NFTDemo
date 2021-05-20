@@ -7,23 +7,25 @@ import {web3Accounts, web3Enable, web3FromSource} from '@polkadot/extension-dapp
 import {cennznetExtensions} from "./cennznetExtensions";
 import {getSpecTypes} from '@polkadot/types-known';
 import {defaults as addressDefaults} from '@polkadot/util-crypto/address/defaults';
+import Modal from "./components/modal/modal";
+import logo from './assets/cennznet-logo-light.svg'
 
 const registry = new TypeRegistry();
 const url = 'wss://kong2.centrality.me/public/rata/ws';
-const collectionId = 'centrality_team_1';
+const collectionId = 'Centrality Team Sheep';
 
 function NFTCollection(props) {
   const [tokenInfo, setTokenInfo] = useState(undefined);
   const [cardHovered, setCardHovered] = useState(true);
-  const [isToggleOn, setToggleOn] = useState(false);
   const [nftAttribute, setNftAttribute] = useState(undefined);
   const [tokenOwner, setTokenOwner] = useState(undefined);
+  const [tokenOwnerName, setTokenOwnerName] = useState(undefined);
   const {api, allAccounts} = props;
   const toggleHover = () => setCardHovered(!cardHovered);
   const addToken = async() => {
       const account = allAccounts[0];
       const attributes = [
-          {'Url': nftAttribute}];
+          {'Url': nftAttribute}, {'Text': tokenOwnerName}];
       const tokenExtrinsic = api.tx.nft.createToken(collectionId, tokenOwner, attributes, null);
       const injector = await web3FromSource(account.meta.source);
       tokenExtrinsic.signAndSend(account.address, { signer: injector.signer }, ({ status }) => {
@@ -33,11 +35,6 @@ function NFTCollection(props) {
       }).catch((error) => {
           console.log(':( transaction failed', error);
       });
-      setToggleOn(!isToggleOn)
-  }
-
-  const showTokenAttribute = () => {
-      setToggleOn(!isToggleOn)
   }
 
   useEffect( () => {
@@ -65,35 +62,28 @@ function NFTCollection(props) {
                       src={tokenDetails[0].Url}
                       onMouseEnter={toggleHover}
                       onMouseLeave={toggleHover}
-                      alt="Image Not Found"
+                      alt="Not Found"
                   />
                 </div>
               </div>
               <div className="flip-card-back">
-                <h3>Token Number {tokenId}</h3>
-                <h3>Token Owner</h3>
+                <h3>Token Number: {tokenId}</h3>
+                <h3>Token Name: {tokenDetails[1].Text}</h3>
+                <h3>Token Owner:</h3>
                 <p>{owner}</p>
               </div>
             </div>
           </div>
           )
         })}
-          <button onClick={showTokenAttribute}>
-              {`Add Token in ${collectionId} collection`}
-          </button>
-          {isToggleOn ?  <div>
-              <label>
-                  Enter Attribute:
-                  <input type="text" value={nftAttribute} onChange={(event) =>{setNftAttribute(event.target.value)}} />
-              </label>
-              <label>
-                  Enter Token owner:
-                  <input type="text" value={tokenOwner} onChange={(event) =>{setTokenOwner(event.target.value)}} />
-              </label>
-              <button onClick={addToken}>
-                  {'Add'}
-              </button>
-          </div> : null}
+          <Modal
+              title={"Add To Collection"}
+              btnId={"createNFT"}
+              nftAttributeHandler={setNftAttribute}
+              tokenOwnerHandler={setTokenOwner}
+              tokenOwnerNameHandler={setTokenOwnerName}
+              addTokenHandler={addToken}
+          />
       </div>
   );
 }
@@ -166,7 +156,11 @@ function App() {
   return (
     <div className="App">
       <div>
-        <h1 className="neonText"> NFT DEMO</h1>
+          <div className="navbar">
+          <img src={logo} className="logo" width="60px" height="60px" alt={"Not Found"}/>
+            <h1 className="neonText neonTitle">NFT DEMO</h1>
+            <button id="createNFT" className="neon-button">Create</button>
+          </div>
         <h3 className="neonText">Collection: {collectionId}</h3>
       </div>
       <NFTCollection api={api} allAccounts={allAccounts}></NFTCollection>
