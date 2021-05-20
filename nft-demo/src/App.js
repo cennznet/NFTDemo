@@ -4,11 +4,16 @@ import {Api as ApiPromise} from '@cennznet/api';
 import {useEffect, useState} from "react";
 import * as nft from './nft';
 const registry = new TypeRegistry();
+
 const url = 'wss://kong2.centrality.me/public/rata/ws';
+const collectionId = 'centrality_team_1';
 
 function NFTCollection(props) {
   const [tokenInfo, setTokenInfo] = useState(undefined);
-  const collectionId = 'centrality_team_1';
+  const [cardHovered, setCardHovered] = useState(true);
+
+  const toggleHover = () => setCardHovered(!cardHovered);
+
   const {api} = props;
   useEffect( () => {
     async function fetch() {
@@ -20,23 +25,36 @@ function NFTCollection(props) {
     fetch();
   })
   return (
-      <div>
-      <h1>Collection, {collectionId}</h1>
-      <table>
-        {tokenInfo?.map(({tokenId, tokenDetails, owner}) => (
-            <tr key={tokenId.toString()}>
-              <td>
-                {tokenId.toString()}
-              </td>
-              <td >
-                {tokenDetails.toString()}
-              </td>
-              <td>
-                {owner.toString()}
-              </td>
-            </tr>
-        ))}
-      </table>
+      <div className='nft_container'>
+        {tokenInfo?.map(({tokenId, tokenDetails, owner}) => {
+          tokenId = tokenId.toString()
+          tokenDetails = JSON.parse(tokenDetails.toString())
+          owner = owner.toString()
+          return (
+          <div className="flip-card">
+            <div className="flip-card-inner">
+              <div className="flip-card-front">
+                <div>
+                  <img
+                      key={tokenId}
+                      width="300px"
+                      height="300px"
+                      src={tokenDetails[0].Url}
+                      onMouseEnter={toggleHover}
+                      onMouseLeave={toggleHover}
+                      alt="Image Not Found"
+                  />
+                </div>
+              </div>
+              <div className="flip-card-back">
+                <h3>Token Number {tokenId}</h3>
+                <h3>Token Owner</h3>
+                <p>{owner}</p>
+              </div>
+            </div>
+          </div>
+          )
+        })}
       </div>
   );
 }
@@ -57,7 +75,13 @@ function App() {
   }
 
   return (
+    <div className="App">
+      <div>
+        <h1 className="neonText"> NFT DEMO</h1>
+        <h3 className="neonText">Collection: {collectionId}</h3>
+      </div>
       <NFTCollection api={api}></NFTCollection>
+    </div>
   );
 }
 
