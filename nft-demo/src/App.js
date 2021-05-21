@@ -31,9 +31,11 @@ function NFTCollection(props) {
       tokenExtrinsic.signAndSend(account.address, { signer: injector.signer }, ({ status }) => {
           if (status.isInBlock) {
               console.log(`Completed at block hash #${status.asInBlock.toString()}`);
+              alert(`Completed at block hash #${status.asInBlock.toString()}`)
           }
       }).catch((error) => {
           console.log(':( transaction failed', error);
+          alert(':( transaction failed ' + error)
       });
   }
 
