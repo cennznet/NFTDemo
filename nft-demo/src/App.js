@@ -2,7 +2,6 @@ import './App.css';
 import { TypeRegistry } from '@polkadot/types';
 import {Api as ApiPromise} from '@cennznet/api';
 import {useEffect, useState} from "react";
-import * as nft from './nft';
 import {web3Accounts, web3Enable, web3FromSource} from '@polkadot/extension-dapp';
 import {cennznetExtensions} from "./cennznetExtensions";
 import {getSpecTypes} from '@polkadot/types-known';
@@ -12,8 +11,8 @@ import logo from './assets/cennznet-logo-light.svg'
 
 const registry = new TypeRegistry();
 const url = 'wss://kong2.centrality.me/public/rata/ws';
-const collectionId = 'Centrality Team Sheep';
-
+const collectionName = 'Centrality Team Sheep';
+const collectionId = 0;
 function NFTCollection(props) {
   const [tokenInfo, setTokenInfo] = useState(undefined);
   const [cardHovered, setCardHovered] = useState(true);
@@ -26,7 +25,8 @@ function NFTCollection(props) {
       const account = allAccounts[0];
       const attributes = [
           {'Url': nftAttribute}, {'Text': tokenOwnerName}];
-      const tokenExtrinsic = api.tx.nft.createToken(collectionId, tokenOwner, attributes, null);
+
+      const tokenExtrinsic = api.tx.nft.mintUnique(collectionId, tokenOwner, attributes, null, null);
       const injector = await web3FromSource(account.meta.source);
       tokenExtrinsic.signAndSend(account.address, { signer: injector.signer }, ({ status }) => {
           if (status.isInBlock) {
@@ -46,9 +46,10 @@ function NFTCollection(props) {
   })
   return (
       <div className='nft_container'>
-        {tokenInfo?.map(({tokenId, tokenDetails, owner}) => {
-          tokenId = tokenId.toString()
-          tokenDetails = JSON.parse(tokenDetails.toString())
+        {tokenInfo?.map(({tokenId, attributes, owner}) => {
+          const {collectionId, seriesId, serialNumber} = tokenId;
+          const key = `${collectionId.toString()}_${seriesId.toString()}_${serialNumber.toString()}`;
+          attributes = attributes.toJSON();
           owner = owner.toString()
           return (
           <div className="flip-card">
@@ -56,10 +57,10 @@ function NFTCollection(props) {
               <div className="flip-card-front">
                 <div>
                   <img
-                      key={tokenId}
+                      key={key}
                       width="300px"
                       height="300px"
-                      src={tokenDetails[0].Url}
+                      src={attributes[0].Url}
                       onMouseEnter={toggleHover}
                       onMouseLeave={toggleHover}
                       alt="Not Found"
@@ -67,8 +68,8 @@ function NFTCollection(props) {
                 </div>
               </div>
               <div className="flip-card-back">
-                <h3>Token Number: {tokenId}</h3>
-                <h3>Token Name: {tokenDetails[1].Text}</h3>
+                <h3>Token Number: {seriesId.toString()}</h3>
+                <h3>Token Name: {attributes[1].Text}</h3>
                 <h3>Token Owner:</h3>
                 <p>{owner}</p>
               </div>
@@ -105,6 +106,7 @@ async function extractMeta(api) {
   if (specTypes.ExtrinsicPayloadV4) {
     delete specTypes.ExtrinsicPayloadV4;
   }
+  delete specTypes.EnhancedTokenId;
   const DEFAULT_SS58 = api.registry.createType('u32', addressDefaults.prefix);
   const DEFAULT_DECIMALS = api.registry.createType('u32', 4);
   const metadata = {
@@ -128,8 +130,7 @@ function App() {
   const [allAccounts, setAllAccounts] = useState(undefined);
 
   useEffect( () => {
-    const derives = {nft};
-    const api = new ApiPromise({provider: url, registry, derives});
+    const api = new ApiPromise({provider: url, registry});
     api.on('ready', async () => {
       const extensions = await web3Enable('my nft dapp');
       const polkadotExtension = extensions.find(ext => ext.name === 'polkadot-js');
@@ -161,7 +162,7 @@ function App() {
             <h1 className="neonText neonTitle">NFT DEMO</h1>
             <button id="createNFT" className="neon-button">Create</button>
           </div>
-        <h3 className="neonText">Collection: {collectionId}</h3>
+        <h3 className="neonText">Collection: {collectionName}</h3>
       </div>
       <NFTCollection api={api} allAccounts={allAccounts}></NFTCollection>
     </div>
