@@ -27,7 +27,7 @@ There are a couple steps required for installation:
 
 - Ensure you have [Node js](https://nodejs.org/en/) and [yarn](https://classic.yarnpkg.com/en/docs/install/#mac-stable) installed
 - Run `yarn` to install dependencies
-- _Optional_ - Install the [Cennznet Browser Extension](https://chrome.google.com/webstore/detail/cennznet-extension/feckpephlmdcjnpoclagmaogngeffafk?hl=en) for managing transactions between Dapps & accounts. Only required if you are using connecting to your wallet via the browser extension and not via Keyring.
+- _Optional_ - Install the [Cennznet Browser Extension](https://chrome.google.com/webstore/detail/cennznet-extension/feckpephlmdcjnpoclagmaogngeffafk?hl=en) for managing transactions between Dapps & accounts. Only required if you want to connect to your wallet via the browser extension and not via Keyring. The App supports both options.
 - Simply run `yarn start` to launch the app
 - Connect to `localhost:3000` on a browser to view the demo
 
