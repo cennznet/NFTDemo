@@ -11,7 +11,7 @@ This app connects to one of our public blockchains currently the development net
 which has a NFT collection and tokens minted on it already.
 
 It uses our open source [API](https://github.com/cennznet/api.js) to connect, query, and make transactions (Extrinsics) on the blockchain.
-It is querying the NFT collection ID `Centrality Team Sheep` and retrieving the NFT tokens and all associated metadata from that collection and presenting these details in the UI.
+It is querying the NFT collection name `Centrality Team Sheep` and collection id `0` and retrieving the NFT tokens and all associated metadata from that collection and presenting these details in the UI.
 
 
 The app can also mint tokens within the given collection via the `Create` button. In this example we have a collection that has two properties that we've defined when creating the collection. 
