@@ -24,18 +24,24 @@ function NFTCollection(props) {
   const {api, allAccounts, extensionEnabled} = props;
   const toggleHover = () => setCardHovered(!cardHovered);
   const addToken = async() => {
-      const account = allAccounts[0];
       const attributes = [
           {'Url': nftAttribute}, {'Text': tokenOwnerName}];
 
       const tokenExtrinsic = api.tx.nft.mintUnique(collectionId, tokenOwner, attributes, null, null);
       let payload = {};
+      let signer;
+      // If extension is enabled use the first account from extension, else use keypair(rata) from Keyring to sign the transaction
       if (extensionEnabled) {
+          const account = allAccounts[0];
           const injector = await web3FromSource(account.meta.source);
           payload = {signer: injector.signer};
+          signer = account.address;
+      } else {
+          const signerKeypair = allAccounts[0];
+          signer = signerKeypair;
       }
-      // If extension is enabled use the first account from extension, else use keypair(rata) from Keyring to sign the transaction
-      tokenExtrinsic.signAndSend(extensionEnabled ? account.address : account, payload, ({ status }) => {
+
+      tokenExtrinsic.signAndSend(signer, payload, ({ status }) => {
           if (status.isInBlock) {
               console.log(`Completed at block hash #${status.asInBlock.toString()}`);
           }
