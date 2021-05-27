@@ -2,7 +2,7 @@ import './App.css';
 import { TypeRegistry } from '@polkadot/types';
 import {Api as ApiPromise} from '@cennznet/api';
 import {useEffect, useState} from "react";
-import * as nft from './nft';
+import * as nft from './nft/index';
 import {web3Accounts, web3Enable, web3FromSource} from '@polkadot/extension-dapp';
 import {cennznetExtensions} from "./cennznetExtensions";
 import {getSpecTypes} from '@polkadot/types-known';
