@@ -97,16 +97,12 @@ async function extractMeta(api) {
       api.runtimeVersion.specName,
       api.runtimeVersion.specVersion
   );
-  if (specTypes.ExtrinsicSignatureV4) {
-    delete specTypes.ExtrinsicSignatureV4;
-  }
-  if (specTypes.SignerPayload) {
-    delete specTypes.SignerPayload;
-  }
-  if (specTypes.ExtrinsicPayloadV4) {
-    delete specTypes.ExtrinsicPayloadV4;
-  }
-  delete specTypes.EnhancedTokenId;
+  const filteredSpecTypes = Object.keys(specTypes)
+      .filter(key => typeof specTypes[key] !== 'function')
+      .reduce((obj, key) => {
+          obj[key] = specTypes[key];
+          return obj;
+          }, {});
   const DEFAULT_SS58 = api.registry.createType('u32', addressDefaults.prefix);
   const DEFAULT_DECIMALS = api.registry.createType('u32', 4);
   const metadata = {
@@ -119,7 +115,7 @@ async function extractMeta(api) {
         ss58Format: DEFAULT_SS58.toNumber(),
         tokenDecimals: DEFAULT_DECIMALS.toNumber(),
         tokenSymbol: 'CENNZ',
-        types: specTypes,
+        types: filteredSpecTypes,
         userExtensions: cennznetExtensions,
       };
   return metadata;
@@ -133,20 +129,22 @@ function App() {
     const api = new ApiPromise({provider: url, registry});
     api.on('ready', async () => {
       const extensions = await web3Enable('my nft dapp');
-      const polkadotExtension = extensions.find(ext => ext.name === 'polkadot-js');
-      const metadata = polkadotExtension.metadata;
-      const checkIfMetaUpdated =  localStorage.getItem(`EXTENSION_META_UPDATED`);
-      if (!checkIfMetaUpdated) {
-          const metadataDef = await extractMeta(api);
-          await metadata.provide(metadataDef);
-          localStorage.setItem(`EXTENSION_META_UPDATED`, 'true');
-      }
       if (extensions.length === 0) {
-        alert('Please install CENNZnet extension');
+          // TODO - use keyring and get allAccounts to [Alice]
+            alert('Please install CENNZnet extension');
+      } else {
+          const polkadotExtension = extensions.find(ext => ext.name === 'polkadot-js');
+          const metadata = polkadotExtension.metadata;
+          const checkIfMetaUpdated = localStorage.getItem(`EXTENSION_META_UPDATED`);
+          if (!checkIfMetaUpdated) {
+              const metadataDef = await extractMeta(api);
+              await metadata.provide(metadataDef);
+              localStorage.setItem(`EXTENSION_META_UPDATED`, 'true');
+          }
+          const allAccounts = await web3Accounts();
+          setAllAccounts(allAccounts);
+          setApi(api);
       }
-      const allAccounts = await web3Accounts();
-      setAllAccounts(allAccounts);
-      setApi(api);
     });
   });
 
