@@ -140,9 +140,10 @@ function App() {
               const extensions = await web3Enable('my nft dapp');
               let allAccounts;
               let extensionEnabled = false;
+              const keyring = new Keyring({type: 'sr25519'});
+              const rata = keyring.addFromUri('//Rata');
               if (extensions.length === 0) {
-                  const keyring = new Keyring({type: 'sr25519'});
-                  const rata = keyring.addFromUri('//Rata');
+                  // If extension is not installed use keyring to sign
                   allAccounts = [rata];
               } else {
                   const polkadotExtension = extensions.find(ext => ext.name === 'polkadot-js');
@@ -154,7 +155,12 @@ function App() {
                       localStorage.setItem(`EXTENSION_META_UPDATED`, 'true');
                   }
                   allAccounts = await web3Accounts();
-                  extensionEnabled = true;
+                  if (allAccounts.length === 0) {
+                      // If extension is installed but has 0 accounts, use keyring to sign transaction.
+                      allAccounts = [rata];
+                  } else {
+                      extensionEnabled = true;
+                  }
               }
               setExtensionEnabled(extensionEnabled);
               setAllAccounts(allAccounts);
