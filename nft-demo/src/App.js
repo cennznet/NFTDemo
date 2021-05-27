@@ -6,6 +6,7 @@ import {web3Accounts, web3Enable, web3FromSource} from '@polkadot/extension-dapp
 import {cennznetExtensions} from "./cennznetExtensions";
 import {getSpecTypes} from '@polkadot/types-known';
 import {defaults as addressDefaults} from '@polkadot/util-crypto/address/defaults';
+import { Keyring } from '@polkadot/keyring';
 import Modal from "./components/modal/modal";
 import logo from './assets/cennznet-logo-light.svg'
 
@@ -13,13 +14,14 @@ const registry = new TypeRegistry();
 const url = 'wss://kong2.centrality.me/public/rata/ws';
 const collectionName = 'Centrality Team Sheep';
 const collectionId = 0;
+
 function NFTCollection(props) {
   const [tokenInfo, setTokenInfo] = useState(undefined);
   const [cardHovered, setCardHovered] = useState(true);
   const [nftAttribute, setNftAttribute] = useState(undefined);
   const [tokenOwner, setTokenOwner] = useState(undefined);
   const [tokenOwnerName, setTokenOwnerName] = useState(undefined);
-  const {api, allAccounts} = props;
+  const {api, allAccounts, extensionEnabled} = props;
   const toggleHover = () => setCardHovered(!cardHovered);
   const addToken = async() => {
       const account = allAccounts[0];
@@ -27,8 +29,13 @@ function NFTCollection(props) {
           {'Url': nftAttribute}, {'Text': tokenOwnerName}];
 
       const tokenExtrinsic = api.tx.nft.mintUnique(collectionId, tokenOwner, attributes, null, null);
-      const injector = await web3FromSource(account.meta.source);
-      tokenExtrinsic.signAndSend(account.address, { signer: injector.signer }, ({ status }) => {
+      let payload = {};
+      if (extensionEnabled) {
+          const injector = await web3FromSource(account.meta.source);
+          payload = {signer: injector.signer};
+      }
+      // If extension is enabled use the first account from extension, else use keypair(rata) from Keyring to sign the transaction
+      tokenExtrinsic.signAndSend(extensionEnabled ? account.address : account, payload, ({ status }) => {
           if (status.isInBlock) {
               console.log(`Completed at block hash #${status.asInBlock.toString()}`);
           }
@@ -124,28 +131,36 @@ async function extractMeta(api) {
 function App() {
   const [api, setApi] = useState(undefined);
   const [allAccounts, setAllAccounts] = useState(undefined);
+  const [extensionEnabled, setExtensionEnabled] = useState(false);
 
   useEffect( () => {
-    const api = new ApiPromise({provider: url, registry});
-    api.on('ready', async () => {
-      const extensions = await web3Enable('my nft dapp');
-      if (extensions.length === 0) {
-          // TODO - use keyring and get allAccounts to [Alice]
-            alert('Please install CENNZnet extension');
-      } else {
-          const polkadotExtension = extensions.find(ext => ext.name === 'polkadot-js');
-          const metadata = polkadotExtension.metadata;
-          const checkIfMetaUpdated = localStorage.getItem(`EXTENSION_META_UPDATED`);
-          if (!checkIfMetaUpdated) {
-              const metadataDef = await extractMeta(api);
-              await metadata.provide(metadataDef);
-              localStorage.setItem(`EXTENSION_META_UPDATED`, 'true');
-          }
-          const allAccounts = await web3Accounts();
-          setAllAccounts(allAccounts);
-          setApi(api);
+      if (!api) {
+          const apiInstance = new ApiPromise({provider: url, registry});
+          apiInstance.on('ready', async () => {
+              const extensions = await web3Enable('my nft dapp');
+              let allAccounts;
+              let extensionEnabled = false;
+              if (extensions.length === 0) {
+                  const keyring = new Keyring({type: 'sr25519'});
+                  const rata = keyring.addFromUri('//Rata');
+                  allAccounts = [rata];
+              } else {
+                  const polkadotExtension = extensions.find(ext => ext.name === 'polkadot-js');
+                  const metadata = polkadotExtension.metadata;
+                  const checkIfMetaUpdated = localStorage.getItem(`EXTENSION_META_UPDATED`);
+                  if (!checkIfMetaUpdated) {
+                      const metadataDef = await extractMeta(apiInstance);
+                      await metadata.provide(metadataDef);
+                      localStorage.setItem(`EXTENSION_META_UPDATED`, 'true');
+                  }
+                  allAccounts = await web3Accounts();
+                  extensionEnabled = true;
+              }
+              setExtensionEnabled(extensionEnabled);
+              setAllAccounts(allAccounts);
+              setApi(apiInstance);
+          });
       }
-    });
   });
 
   if (!api) {
@@ -162,7 +177,7 @@ function App() {
           </div>
         <h3 className="neonText">Collection: {collectionName}</h3>
       </div>
-      <NFTCollection api={api} allAccounts={allAccounts}></NFTCollection>
+      <NFTCollection extensionEnabled={extensionEnabled} api={api} allAccounts={allAccounts}></NFTCollection>
     </div>
   );
 }

@@ -44,7 +44,12 @@ class Modal extends Component {
                             Enter Token name:
                             <input type="text" onChange={(event) =>{this.props.tokenOwnerNameHandler(event.target.value)}} />
                         </label>
-                        <button className="modal-button" onClick={this.props.addTokenHandler}>Add</button>
+                        <button className="modal-button"
+                                onClick={() =>{
+                                    document.getElementById("myModal").style.display = "none";
+                                    this.props.addTokenHandler()
+                                }}
+                        >Add</button>
                     </div>
                 </div>
             </div>
