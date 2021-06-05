@@ -1,0 +1,65 @@
+name: Build & deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+
+      - name: Install yarn packages
+        run: |
+              yarn config set network-timeout 300000
+              yarn
+
+      - name: Build project
+        run: yarn run build
+
+      - name: Upload production-ready build files
+        uses: actions/upload-artifact@v2
+        with:
+          name: production-files
+          path: ./build
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: macos-latest
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: production-files
+          path: ./build
+
+      - name: Deploy to IPFS
+        uses: aquiladev/ipfs-action@v0.1.5
+        with:
+          path: ./build
+          service: pinata
+          pinataKey: ${{ secrets.PINATA_KEY }}
+          pinataSecret: ${{ secrets.PINATA_SECRET }}
+          pinataPinName: NFTDEMO
+        id: IPFS_CID
+        
+      - name: Update Homepage with IPFS URL
+        run: |
+          IPFS_CID=${{join(steps.IPFS_CID.outputs.*, '\n')}}
+          curl --request PATCH \
+          --url https://api.github.com/repos/${{ github.repository }} \
+          --header 'authorization: Bearer ${{ secrets.NFTDEMO_PERSONAL_TOKEN }}' \
+          --header 'content-type: application/json' \
+          --data '{"name":"NFTDemo", "homepage":"https://gateway.pinata.cloud/ipfs/'"$IPFS_CID"'"}'

@@ -2,6 +2,7 @@
   "name": "nft-demo",
   "version": "0.1.0",
   "private": true,
+  "homepage": "./",
   "dependencies": {
     "@cennznet/api": "1.4.0",
     "@cennznet/types": "1.4.0",
