@@ -21,6 +21,18 @@ and that endpoint can be provided for the minting process.
 This demo only scratches the surface on our NFT capabilities, and there are of many more options such royality schemes, auctioning, creating collections, creating series, and creating a variety of property types,
 which you can explore via our API or though the [cennznet.io](https://cennznet.io/#/) by connecting to the nft module more details on that on our [wiki](https://wiki.cennz.net/#/References/Runtime-modules/NFT). 
 
+
+### Use Docker to run this Demo
+
+```
+## run this demo in Docker container
+$ docker run -u node --name cennz-nft-demo -it --rm -p "3000:3000" -v "$PWD:/app" -w "/app" node:12 bash
+
+## Inside your docker container run the following
+$ yarn install && yarn run start
+
+```
+
 ## Setup
 
 There are a couple steps required for installation:
@@ -30,6 +42,7 @@ There are a couple steps required for installation:
 - _Optional_ - Install the [Cennznet Browser Extension](https://chrome.google.com/webstore/detail/cennznet-extension/feckpephlmdcjnpoclagmaogngeffafk?hl=en) for managing transactions between Dapps & accounts. Only required if you want to connect to your wallet via the browser extension and not via Keyring. The App supports both options.
 - Simply run `yarn start` to launch the app
 - Connect to `localhost:3000` on a browser to view the demo
+
 
 ## Resources
 
